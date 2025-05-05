@@ -8,6 +8,7 @@ export const GET = async (request: Request): Promise<Response> => {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   if (!code) {
+    console.error('Missing code parameter from Slack');
     return Response.json({ error: 'Missing code parameter from Slack' }, { status: 400 });
   }
 
@@ -26,17 +27,22 @@ export const GET = async (request: Request): Promise<Response> => {
   const tokenData = await tokenRes.json();
 
   if (!tokenData.ok) {
+    console.error('Slack OAuth failed', tokenData);
     return Response.json({ error: 'Slack OAuth failed', details: tokenData }, { status: 400 });
   }
 
   const accessToken = tokenData.access_token;
 
   if (!accessToken) {
+    console.error('Missing access token from Slack response');
     return Response.json({ error: 'Missing access token from Slack response' }, { status: 400 });
   }
 
+  console.log('Slackbot installed... about to ingest!');
+
   try {
     await ingestSlack(accessToken);
+    console.log('Slackbot installed and workspace ingested successfully!');
     return new Response('Slackbot installed and workspace ingested successfully!', { status: 200 });
   } catch (err) {
     return Response.json(
