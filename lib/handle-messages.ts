@@ -1,12 +1,9 @@
-import type {
-  AssistantThreadStartedEvent,
-  GenericMessageEvent,
-} from "@slack/web-api";
+import { SlackEvent } from "../types/slack-events";
 import { client, getThread, updateStatusUtil } from "./slack-utils";
 import { generateResponse } from "./generate-response";
 
 export async function assistantThreadMessage(
-  event: AssistantThreadStartedEvent,
+  event: SlackEvent,
 ) {
   const { channel_id, thread_ts } = event.assistant_thread;
   console.log(`Thread started: ${channel_id} ${thread_ts}`);
@@ -35,7 +32,7 @@ export async function assistantThreadMessage(
 }
 
 export async function handleNewAssistantMessage(
-  event: GenericMessageEvent,
+  event: SlackEvent,
   botUserId: string,
 ) {
   if (
