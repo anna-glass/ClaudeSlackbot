@@ -3,8 +3,7 @@ import { chronoIngest } from "../../lib/chrono-ingest";
 
 // Use Node.js serverless function instead of Edge runtime
 export const config = {
-  runtime: 'nodejs',
-  // Set to maximum allowed duration
+  // Remove runtime specification and let Vercel determine it
   maxDuration: 60 // 60 seconds
 };
 
