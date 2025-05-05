@@ -4,8 +4,8 @@ import { chronoIngest } from "../../lib/chrono-ingest";
 // Use Node.js serverless function instead of Edge runtime
 export const config = {
   runtime: 'nodejs',
-  // Increase timeout if needed for long-running processes
-  maxDuration: 300 // 5 minutes
+  // Set to maximum allowed duration
+  maxDuration: 60 // 60 seconds
 };
 
 // Vercel cron handler
