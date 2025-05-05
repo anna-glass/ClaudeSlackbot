@@ -38,7 +38,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^22.15.3
-        version: 22.15.3
+        version: 22.15.7
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -96,8 +96,8 @@ packages:
   '@types/diff-match-patch@1.0.36':
     resolution: {integrity: sha512-xFdR6tkm0MWvBfO8xXCSsinYxHcqkQUlcHeSpMC2ukzOb6lwQAfDmW+Qt0AvlGd8HpsS28qKsB+oPeJn9I39jg==}
 
-  '@types/node@22.15.3':
-    resolution: {integrity: sha512-lX7HFZeHf4QG/J7tBZqrCAXwz9J5RD56Y6MpP0eJkka8p+K0RY/yBTW7CYFJ4VGCclxqOLKmiGP5juQc6MKgcw==}
+  '@types/node@22.15.7':
+    resolution: {integrity: sha512-3hieEH05p8cnASknk8cYV71K2Vqmn4Nv8gjvRc5N3XbMlBS4wPwsmsw5bcHw6ISL36vVFuAhElcQCf7Ir4bR0w==}
 
   '@types/retry@0.12.0':
     resolution: {integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==}
@@ -393,7 +393,7 @@ snapshots:
 
   '@slack/logger@4.0.0':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 22.15.7
 
   '@slack/types@2.14.0': {}
 
@@ -401,7 +401,7 @@ snapshots:
     dependencies:
       '@slack/logger': 4.0.0
       '@slack/types': 2.14.0
-      '@types/node': 22.15.3
+      '@types/node': 22.15.7
       '@types/retry': 0.12.0
       axios: 1.9.0
       eventemitter3: 5.0.1
@@ -416,7 +416,7 @@ snapshots:
 
   '@types/diff-match-patch@1.0.36': {}
 
-  '@types/node@22.15.3':
+  '@types/node@22.15.7':
     dependencies:
       undici-types: 6.21.0
 
