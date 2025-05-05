@@ -13,6 +13,13 @@ export async function ingestSlack(accessToken: string) {
 
   const channels = await fetchAllPublicChannels(client);
   for (const channel of channels) {
+    try {
+      await client.conversations.join({ channel: channel.id });
+      console.log(`Joined channel: ${channel.id}`);
+    } catch (err) {
+      console.log('Already in channel.');
+    }
+  
     let cursor: string | undefined;
     do {
       const historyRes = await client.conversations.history({ channel: channel.id, cursor });

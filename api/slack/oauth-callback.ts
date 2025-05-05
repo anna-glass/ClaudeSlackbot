@@ -5,6 +5,7 @@ const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET!;
 const SLACK_REDIRECT_URI = process.env.SLACK_REDIRECT_URI!;
 
 export const GET = async (request: Request): Promise<Response> => {
+    console.log('OAuth callback invoked');
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   if (!code) {
