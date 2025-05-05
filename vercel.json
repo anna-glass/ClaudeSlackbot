@@ -8,7 +8,16 @@
   "functions": {
     "api/events.ts": {
       "maxDuration": 60
+    },
+    "api/cron/ingest.ts": {
+      "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/ingest",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "outputDirectory": "dist"
 }

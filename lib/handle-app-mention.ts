@@ -1,10 +1,10 @@
-import { AppMentionEvent } from "@slack/web-api";
+import { SlackEvent } from "../types/slack-events";
 import { client, getThread } from "./slack-utils";
 import { generateResponse } from "./generate-response";
 
 const updateStatusUtil = async (
   initialStatus: string,
-  event: AppMentionEvent,
+  event: SlackEvent,
 ) => {
   const initialMessage = await client.chat.postMessage({
     channel: event.channel,
@@ -26,7 +26,7 @@ const updateStatusUtil = async (
 };
 
 export async function handleNewAppMention(
-  event: AppMentionEvent,
+  event: SlackEvent,
   botUserId: string,
 ) {
   console.log("Handling app mention");
