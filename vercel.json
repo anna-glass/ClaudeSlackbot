@@ -8,6 +8,10 @@
   "functions": {
     "api/events.ts": {
       "maxDuration": 60
+    },
+    "api/cron/ingest.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 300
     }
   },
   "crons": [

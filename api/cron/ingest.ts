@@ -1,8 +1,15 @@
 import { client } from "../../lib/slack-utils";
 import { chronoIngest } from "../../lib/chrono-ingest";
 
+// Use Node.js serverless function instead of Edge runtime
+export const config = {
+  runtime: 'nodejs',
+  // Increase timeout if needed for long-running processes
+  maxDuration: 300 // 5 minutes
+};
+
 // Vercel cron handler
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Get the team/workspace ID from Slack API
     const authInfo = await client.auth.test();
@@ -50,9 +57,4 @@ async function fetchAllPublicChannels() {
     console.error("Error fetching channels:", error);
     throw error;
   }
-}
-
-// Secret to verify this is a legitimate Vercel cron invocation
-export const config = {
-  runtime: 'edge',
-}; 
+} 
