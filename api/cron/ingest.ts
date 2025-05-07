@@ -1,10 +1,9 @@
 import { client } from "../../lib/slack-utils";
 import { chronoIngest } from "../../lib/chrono-ingest";
+import { fetchAllPublicChannels } from "../../lib/fetch-public-channels";
 
-// Use Node.js serverless function instead of Edge runtime
 export const config = {
-  // Remove runtime specification and let Vercel determine it
-  maxDuration: 60 // 60 seconds
+  maxDuration: 60
 };
 
 // Vercel cron handler
@@ -18,8 +17,7 @@ export async function GET(request: Request) {
       return new Response("Failed to get workspace ID", { status: 500 });
     }
 
-    // Fetch all public channels in the workspace
-    const allChannels = await fetchAllPublicChannels();
+    const allChannels = await fetchAllPublicChannels(client);
     
     // Process each channel
     for (const channel of allChannels) {
@@ -32,28 +30,5 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Error during scheduled ingest:", error);
     return new Response("Error during scheduled ingest", { status: 500 });
-  }
-}
-
-// Fetch all public channels
-async function fetchAllPublicChannels() {
-  const channels = [];
-  let cursor;
-
-  try {
-    do {
-      const res = await client.conversations.list({ 
-        types: 'public_channel', 
-        cursor 
-      });
-      
-      channels.push(...(res.channels ?? []));
-      cursor = res.response_metadata?.next_cursor;
-    } while (cursor);
-
-    return channels;
-  } catch (error) {
-    console.error("Error fetching channels:", error);
-    throw error;
   }
 } 
