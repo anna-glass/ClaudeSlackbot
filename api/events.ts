@@ -1,7 +1,14 @@
-import type { SlackEvent } from "@slack/web-api";
+import type { AppMentionEvent, GenericMessageEvent } from '@slack/types';
+
+type SlackEvent =
+  | AppMentionEvent
+  | GenericMessageEvent
+  | AssistantThreadStartedEvent
+
 import {
   assistantThreadMessage,
   handleNewAssistantMessage,
+  AssistantThreadStartedEvent,
 } from "../lib/handle-messages";
 import { waitUntil } from "@vercel/functions";
 import { handleNewAppMention } from "../lib/handle-app-mention";
