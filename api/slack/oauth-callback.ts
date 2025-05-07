@@ -1,4 +1,4 @@
-import { ingestSlack } from '../../lib/ingestSlack';
+import { storeSlackToken } from '../../lib/slackTokenStore';
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID!;
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET!;
@@ -33,21 +33,28 @@ export const GET = async (request: Request): Promise<Response> => {
   }
 
   const accessToken = tokenData.access_token;
+  const workspaceId = tokenData.team?.id;
 
   if (!accessToken) {
     console.error('Missing access token from Slack response');
     return Response.json({ error: 'Missing access token from Slack response' }, { status: 400 });
   }
 
-  console.log('Slackbot installed... about to ingest!');
+  if (!workspaceId) {
+    console.error('Missing workspace ID from Slack response');
+    return Response.json({ error: 'Missing workspace ID from Slack response' }, { status: 400 });
+  }
+
+  console.log('Slackbot installed... about to store token!');
 
   try {
-    await ingestSlack(accessToken);
-    console.log('Slackbot installed and workspace ingested successfully!');
-    return new Response('Slackbot installed and workspace ingested successfully!', { status: 200 });
+    // Store the access token in Redis
+    await storeSlackToken(workspaceId, accessToken);
+    console.log('Slackbot installed and token stored successfully!');
+    return new Response('Slackbot installed and token stored successfully!', { status: 200 });
   } catch (err) {
     return Response.json(
-      { error: 'Error during ingestion', details: (err as Error).message },
+      { error: 'Error storing access token', details: (err as Error).message },
       { status: 500 }
     );
   }
