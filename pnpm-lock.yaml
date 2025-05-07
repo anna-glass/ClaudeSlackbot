@@ -20,6 +20,9 @@ importers:
       '@slack/web-api':
         specifier: ^7.0.2
         version: 7.8.0
+      '@upstash/vector':
+        specifier: ^1.2.1
+        version: 1.2.1
       '@vercel/functions':
         specifier: ^2.0.0
         version: 2.0.0
@@ -29,6 +32,9 @@ importers:
       exa-js:
         specifier: ^1.4.10
         version: 1.4.10
+      llm-chunk:
+        specifier: ^0.0.1
+        version: 0.0.1
       zod:
         specifier: ^3.24.2
         version: 3.24.2
@@ -163,6 +169,9 @@ packages:
 
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
+
+  '@upstash/vector@1.2.1':
+    resolution: {integrity: sha512-xKA9qTgbnPsxym/ymgwmaJbJHSTA6b5B1SNyTqJerV8322xn6eJM+p3xZPxKJYDPfSea7RgVxsTkhE9I/mOaOw==}
 
   '@vercel/functions@2.0.0':
     resolution: {integrity: sha512-BSwIihLHoV18gerKZJyGuqd3rtaYM6rJvET1kOwKktshucyaHXTJel7Cxegs+sdX0NZqsX4LO2MFnMU2jG01Cw==}
@@ -420,6 +429,9 @@ packages:
 
   jws@3.2.2:
     resolution: {integrity: sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA==}
+
+  llm-chunk@0.0.1:
+    resolution: {integrity: sha512-n9fHgsSiJb7vXZiC5c4XV6rme+tC7WX/cWH6EJvPPmMOMwOZ9xdg/U9LY5Qhmixd3K1PdRB0FVOdzoJF2HUZbg==}
 
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
@@ -860,6 +872,8 @@ snapshots:
     dependencies:
       '@types/node': 20.17.22
 
+  '@upstash/vector@1.2.1': {}
+
   '@vercel/functions@2.0.0': {}
 
   accepts@2.0.0:
@@ -1148,6 +1162,8 @@ snapshots:
     dependencies:
       jwa: 1.4.1
       safe-buffer: 5.2.1
+
+  llm-chunk@0.0.1: {}
 
   lodash.includes@4.3.0: {}
 
