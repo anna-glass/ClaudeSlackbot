@@ -18,7 +18,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
 
 // Upsert multiple chunks to Upstash Vector
 async function upsertChunks(idPrefix: string, text: string) {
-  // Chunk the input text: max 1024 chars per chunk, 128 char overlap, split by sentence
+  // Chunk the input text: max 1024 chars per chunk, 128 char overlap
   const chunks = chunk(text, {
     maxLength: 1024,
     overlap: 128,
