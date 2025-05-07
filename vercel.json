@@ -1,4 +1,10 @@
 {
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://google.com"
+    }
+  ],
   "functions": {
     "api/slack/events.ts": {
       "maxDuration": 60
