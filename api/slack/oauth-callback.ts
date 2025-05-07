@@ -51,7 +51,10 @@ export const GET = async (request: Request): Promise<Response> => {
     // Store the access token in Redis
     await storeSlackToken(workspaceId, accessToken);
     console.log('Slackbot installed and token stored successfully!');
-    return new Response('Slackbot installed and token stored successfully!', { status: 200 });
+    
+    // Redirect to the onboarding page
+    const onboardingUrl = `/onboarding?workspace_id=${workspaceId}`;
+    return Response.redirect(new URL(onboardingUrl, request.url), 302);
   } catch (err) {
     return Response.json(
       { error: 'Error storing access token', details: (err as Error).message },
