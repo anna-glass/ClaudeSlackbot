@@ -1,5 +1,6 @@
 import { WebClient } from '@slack/web-api'
 import { upsertChunks } from './chunk-embed-and-upsert'
+import { ConversationsListResponse, ConversationsHistoryResponse } from '@slack/web-api'
 
 const slackToken = process.env.SLACK_BOT_TOKEN!
 const client = new WebClient(slackToken)
@@ -30,7 +31,7 @@ export async function ingestPublicChannels() {
   let cursor: string | undefined = undefined
   let channels: any[] = []
   do {
-    const res = await client.conversations.list({
+    const res: ConversationsListResponse = await client.conversations.list({
       types: 'public_channel',
       limit: 1000,
       cursor,
@@ -50,7 +51,7 @@ export async function ingestPublicChannels() {
     // 3. Fetch channel history (paginated)
     let historyCursor: string | undefined = undefined
     do {
-      const history = await client.conversations.history({
+      const history: ConversationsHistoryResponse = await client.conversations.history({
         channel: channel.id,
         limit: 1000,
         cursor: historyCursor,
