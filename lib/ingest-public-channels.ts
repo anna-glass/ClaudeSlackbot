@@ -1,6 +1,7 @@
 import { WebClient } from '@slack/web-api'
 import { upsertChunks } from './chunk-embed-and-upsert'
 import { ConversationsListResponse, ConversationsHistoryResponse, ConversationsRepliesResponse } from '@slack/web-api'
+import { getDisplayName } from './get-display-name'
 
 const slackToken = process.env.SLACK_BOT_TOKEN!
 const client = new WebClient(slackToken)
@@ -24,7 +25,8 @@ async function ingestThread(channelId: string, thread_ts: string, channelName: s
           // Optionally: skip the first message if it's the parent
           (i > 0 || msg.ts !== thread_ts)
         ) {
-          await upsertChunks(`${channelId}-${msg.ts}`, msg.text, msg.user, channelName, `${msg.ts}`)
+          const displayName = await getDisplayName(msg.user)
+          await upsertChunks(`${channelId}-${msg.ts}`, msg.text, msg.user, displayName, channelName, `${msg.ts}`)
         }
       }
     }
@@ -71,7 +73,8 @@ export async function ingestPublicChannels() {
             msg.text &&
             typeof msg.user === 'string'
           ) {
-            await upsertChunks(`${channel.id}-${msg.ts}`, msg.text, msg.user, channel.name, `${msg.ts}`);
+            const displayName = await getDisplayName(msg.user)
+            await upsertChunks(`${channel.id}-${msg.ts}`, msg.text, msg.user, displayName, channel.name, `${msg.ts}`);
             // If this message starts a thread, ingest its replies
             if (msg.thread_ts && msg.thread_ts === msg.ts && (msg.reply_count && msg.reply_count > 0)) {
               await ingestThread(channel.id, msg.thread_ts, channel.name)
