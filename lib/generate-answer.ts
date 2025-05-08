@@ -24,7 +24,7 @@ export async function generateResponseWithClaude(
     max_tokens: 1000,
     temperature: 1,
     system:
-      "You are a helpful Slack assistant. Use the following Slack messages as context to answer the user's question. Reference the people who contributed if helpful.",
+      "You are a helpful Slack assistant. Use the following Slack messages as context to answer the user's question. Respond in one concise sentence.",
     messages,
   });
 
@@ -33,15 +33,18 @@ export async function generateResponseWithClaude(
     .join("")
     .trim();
 
-  return (
-    `${answer}\n` +
-    `${formatExpertTag(expert)}\n` +
-    `${formatSupportingMessages(relevantMessages)}`
-  );
+    const expertTag = formatExpertTag(expert);
+    const expertLine = expertTag ? `*Who to talk to:* ${expertTag}\n` : "";
+
+    return (
+        `${answer}\n` +
+        expertLine +
+        `${formatSupportingMessages(relevantMessages)}`
+    );
 }
 
 export function formatExpertTag(expert?: string): string {
-    if (!expert) return "Unknown";
+    if (!expert) return "None";
     return expert.startsWith("U") ? `<@${expert}>` : `*${expert}*`;
 }
   
@@ -61,8 +64,8 @@ export function formatSlackLink(channel?: string, ts?: string): string | null {
                 : `*${msg.metadata.username}*`;
             const link = formatSlackLink(msg.metadata.channel, msg.metadata.ts);
             return link
-                ? `> ${user}: <${link}|View message> - ${msg.text}`
-                : `> ${user}: ${msg.text}`;
+                ? `> ${user}: <${link}|View message>\n> \`${msg.text}\``
+                : `> ${user}: \`${msg.text}\``;
         })
         .join("\n");
 }

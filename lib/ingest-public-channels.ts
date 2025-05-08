@@ -1,6 +1,6 @@
 import { WebClient } from '@slack/web-api'
 import { upsertChunks } from './chunk-embed-and-upsert'
-import { ConversationsListResponse, ConversationsHistoryResponse } from '@slack/web-api'
+import { ConversationsListResponse, ConversationsHistoryResponse, ConversationsRepliesResponse } from '@slack/web-api'
 
 const slackToken = process.env.SLACK_BOT_TOKEN!
 const client = new WebClient(slackToken)
@@ -24,6 +24,34 @@ async function getUsername(userId: string): Promise<string> {
     userCache[userId] = 'unknown'
     return 'unknown'
   }
+}
+
+async function ingestThread(channelId: string, thread_ts: string, channelName: string) {
+  let cursor: string | undefined = undefined
+  do {
+    const replies: ConversationsRepliesResponse = await client.conversations.replies({
+      channel: channelId,
+      ts: thread_ts,
+      cursor,
+      limit: 1000,
+    })
+    if (replies.messages) {
+      // Skip the first message if it's the thread parent (already ingested)
+      for (const [i, msg] of replies.messages.entries()) {
+        if (
+          msg.type === 'message' &&
+          msg.text &&
+          typeof msg.user === 'string' &&
+          // Optionally: skip the first message if it's the parent
+          (i > 0 || msg.ts !== thread_ts)
+        ) {
+          const username = await getUsername(msg.user)
+          await upsertChunks(`${channelId}-${msg.ts}`, msg.text, username, channelName, `${msg.ts}`)
+        }
+      }
+    }
+    cursor = replies.response_metadata?.next_cursor
+  } while (cursor)
 }
 
 export async function ingestPublicChannels() {
@@ -67,6 +95,10 @@ export async function ingestPublicChannels() {
           ) {
             const username = await getUsername(msg.user);
             await upsertChunks(`${channel.id}-${msg.ts}`, msg.text, username, channel.name, `${msg.ts}`);
+            // If this message starts a thread, ingest its replies
+            if (msg.thread_ts && msg.thread_ts === msg.ts && (msg.reply_count && msg.reply_count > 0)) {
+              await ingestThread(channel.id, msg.thread_ts, channel.name)
+            }
           }
         }
       }
