@@ -8,7 +8,8 @@ export async function handleNewAppMention(event: AppMentionEvent, botUserId: str
     return;
   }
 
-  const {thread_ts, channel} = event;
+  const thread_ts = event.thread_ts || event.ts;
+  const { channel } = event;
 
   try {
     const question = event.text.replace(`<@${botUserId}>`, "").trim();

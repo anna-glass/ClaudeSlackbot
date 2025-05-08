@@ -37,7 +37,8 @@ export async function handleNewAssistantMessage(
     return;
   }
 
-  const { thread_ts, channel } = event;
+  const thread_ts = event.thread_ts || event.ts;
+  const { channel } = event;
 
   try {
     const messages = await getThread(channel, thread_ts, botUserId);
