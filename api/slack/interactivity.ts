@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const action = payload.actions?.[0]
   if (action?.action_id === 'start_ingest') {
     // Construct your public ingest job endpoint URL
-    const jobUrl = `${process.env.BASE_URL}/api/ingest-public-channels-job`
+    const jobUrl = `${process.env.BASE_URL}/api/slack/ingest-public-channels-job`
 
     await qstash.publishJSON({
       url: jobUrl,
