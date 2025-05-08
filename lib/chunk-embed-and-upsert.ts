@@ -11,13 +11,13 @@ const index = new Index({
 const embeddingModel = openai.embedding('text-embedding-3-small')
 
 // Generate OpenAI embedding for a single text chunk
-async function generateEmbedding(text: string): Promise<number[]> {
+export async function generateEmbedding(text: string): Promise<number[]> {
   const { embedding } = await embed({ model: embeddingModel, value: text })
   return embedding
 }
 
 // Upsert multiple chunks to Upstash Vector
-async function upsertChunks(idPrefix: string, text: string, author: string) {
+export async function upsertChunks(idPrefix: string, text: string, author: string) {
   const chunks = chunk(text, {
     maxLength: 1024,
     overlap: 128,
@@ -40,11 +40,3 @@ async function upsertChunks(idPrefix: string, text: string, author: string) {
   }
 }
 
-// Query similar vectors
-async function querySimilar(text: string, k = 4) {
-  const vector = await generateEmbedding(text)
-  const result = await index.query({ vector, topK: k, includeMetadata: true })
-  return result
-}
-
-export { upsertChunks, querySimilar }
