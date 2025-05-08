@@ -27,7 +27,7 @@ async function findRelevantMessages(question: string) {
 function findSubjectExpert(searchResults: NormalizedMessage[]): string | undefined {
     const authorCounts: Record<string, number> = {};
 
-    searchResults.forEach(result => {
+    searchResults.forEach(result => { 
     const author = result.metadata.user_id;
     authorCounts[author] = (authorCounts[author] || 0) + 1;
     });
@@ -41,7 +41,7 @@ export async function handleUserQuestion(question: string) {
     const rawMessages = await findRelevantMessages(question);
     const relevantMessages = rawMessages.map(mapRawToNormalized);
     const expert = findSubjectExpert(relevantMessages);
-    const answer = await generateResponseWithClaude(question, relevantMessages);
+    const answer = await generateResponseWithClaude(question, relevantMessages, expert);
 
     return answer;
 }

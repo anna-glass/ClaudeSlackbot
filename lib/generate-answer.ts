@@ -9,7 +9,10 @@ export async function generateResponseWithClaude(
   expert?: string
 ): Promise<string> {
   const context = relevantMessages
-    .map((msg, i) => `(${i + 1}) ${msg.metadata.user_id}: ${msg.text}`)
+    .map((msg, i) => {
+        const display = msg.metadata.display_name || "User";
+        return `(${i + 1}) ${display}: ${msg.text}`;
+    })
     .join('\n');
 
   const messages = [
