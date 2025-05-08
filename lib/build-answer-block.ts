@@ -46,11 +46,10 @@ export function buildAnswerBlocks({
     // Related messages (each as a section)
     for (const msg of relevantMessages) {
       const user = formatUserTag(msg.metadata.user_id);
-      const display = msg.metadata.display_name || "User";
       const link = formatSlackLink(msg.metadata.channel, msg.metadata.ts);
       const textBlock = link
-        ? `*${user}* (${display}): <${link}|View message>\n>${msg.text}`
-        : `*${user}* (${display}):\n>${msg.text}`;
+        ? `*${user}*: <${link}|View message>\n>${msg.text}`
+        : `*${user}*:\n>${msg.text}`;
   
       blocks.push({
         type: "section",
