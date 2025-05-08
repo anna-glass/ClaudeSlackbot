@@ -61,12 +61,9 @@ export async function handleNewAssistantMessage(
 async function postReply(channel: string, thread_ts: string | undefined, blocks: any[], text: string) {
   return client.chat.postMessage({
     channel,
-    thread_ts: thread_ts || undefined,
+    thread_ts,
     text,
+    blocks,
     unfurl_links: false,
-    blocks: [{
-      type: "section",
-      text: { type: "mrkdwn", text }
-    }]
   });
 }
