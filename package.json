@@ -13,7 +13,6 @@
   "license": "ISC",
   "dependencies": {
     "@ai-sdk/openai": "^1.1.14",
-    "@slack/bolt": "^4.2.1",
     "@slack/types": "^2.14.0",
     "@slack/web-api": "^7.0.2",
     "@upstash/redis": "^1.34.9",

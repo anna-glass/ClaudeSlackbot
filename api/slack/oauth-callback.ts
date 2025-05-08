@@ -1,5 +1,3 @@
-// pages/api/slack/oauth-callback.ts
-
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Redis } from '@upstash/redis'
 import {

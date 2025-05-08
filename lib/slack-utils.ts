@@ -6,6 +6,15 @@ const signingSecret = process.env.SLACK_SIGNING_SECRET!
 
 export const client = new WebClient(process.env.SLACK_BOT_TOKEN);
 
+function getHeader(request: any, key: string): string | undefined {
+  if (typeof request.headers.get === 'function') {
+    // Web Fetch API
+    return request.headers.get(key) || undefined;
+  }
+  // Node.js/IncomingMessage
+  return request.headers[key.toLowerCase()] || undefined;
+}
+
 // https://api.slack.com/authentication/verifying-requests-from-slack
 export async function isValidSlackRequest({
   request,
@@ -14,8 +23,8 @@ export async function isValidSlackRequest({
   request: Request
   rawBody: string
 }) {
-  const timestamp = request.headers.get('x-slack-request-timestamp')
-  const slackSignature = request.headers.get('x-slack-signature')
+  const timestamp = getHeader(request, 'x-slack-request-timestamp');
+  const slackSignature = getHeader(request, 'x-slack-signature');
 
   if (!timestamp || !slackSignature) {
     console.log('Missing timestamp or signature')
