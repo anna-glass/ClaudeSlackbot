@@ -68,12 +68,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
         }
       });
-
-    sendAdminStatusDM({
-      accessToken: process.env.SLACK_BOT_TOKEN!,
-      userId: userId,
-      text: "✅ Ingest of public channels started!",
-    });
   
     return res.json({
       response_type: 'ephemeral',
