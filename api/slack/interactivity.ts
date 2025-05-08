@@ -18,8 +18,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     buffers.push(chunk as Buffer);
   }
   const rawBody = Buffer.concat(buffers).toString();
-  console.log('RAW BODY:', JSON.stringify(rawBody));
-  console.log('Headers:', req.headers);
 
   // Verify Slack request signature
   const valid = await isValidSlackRequest({ request: req as any, rawBody })

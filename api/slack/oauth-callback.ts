@@ -16,16 +16,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log('--- OAuth callback hit ---');
   if (req.method !== 'GET') {
-    console.log('Wrong method:', req.method);
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { code } = req.query;
-  console.log('Received code:', code);
   if (!code || typeof code !== 'string') {
-    console.log('Missing code in query params:', req.query);
     return res.status(400).json({ error: 'Missing code' });
   }
 
@@ -36,7 +32,6 @@ export default async function handler(
     client_secret: process.env.SLACK_CLIENT_SECRET!,
     redirect_uri: process.env.SLACK_REDIRECT_URI!,
   });
-  console.log('Exchanging code for token with params:', params.toString());
 
   const slackRes = await fetch('https://slack.com/api/oauth.v2.access', {
     method: 'POST',
@@ -45,9 +40,7 @@ export default async function handler(
   });
 
   const data = await slackRes.json();
-  console.log('Slack OAuth response:', data);
   if (!data.ok) {
-    console.log('Slack OAuth failed:', data.error);
     return res.status(400).json({ error: data.error || 'Slack OAuth failed' });
   }
 
@@ -62,7 +55,6 @@ export default async function handler(
   console.log('Parsed values:', { workspaceName, workspaceId, accessToken, adminUserId });
 
   if (!workspaceName || !workspaceId || !accessToken || !adminUserId) {
-    console.log('Missing workspace, token, or admin info');
     return res.status(400).json({ error: 'Missing workspace, token, or admin info' });
   }
 
@@ -73,7 +65,6 @@ export default async function handler(
     accessToken,
     adminUserId,
   });
-  console.log('Saved workspace info to Redis');
 
   // Send onboarding DM to admin
   try {
@@ -89,6 +80,5 @@ export default async function handler(
   }
 
   // Show success HTML
-  console.log('Sending success HTML');
   res.status(200).send(oauthSuccessHtml);
 }
