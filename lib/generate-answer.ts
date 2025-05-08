@@ -33,7 +33,7 @@ export async function generateResponseWithClaude(
     .join("")
     .trim();
 
-    const expertTag = formatExpertTag(expert);
+    const expertTag = formatUserTag(expert);
     const expertLine = expertTag ? `*Who to talk to:* ${expertTag}\n` : "";
 
     return (
@@ -43,9 +43,9 @@ export async function generateResponseWithClaude(
     );
 }
 
-export function formatExpertTag(expert?: string): string {
-    if (!expert) return "None";
-    return expert.startsWith("U") ? `<@${expert}>` : `*${expert}*`;
+function formatUserTag(user_id?: string): string {
+  if (!user_id) return "None";
+  return user_id.startsWith("U") ? `<@${user_id}>` : `*${user_id}*`;
 }
   
 export function formatSlackLink(channel?: string, ts?: string): string | null {
@@ -58,10 +58,7 @@ export function formatSlackLink(channel?: string, ts?: string): string | null {
     if (!messages.length) return "No supporting messages found.";
     return messages
         .map(msg => {
-            const user =
-                msg.metadata.user_id && msg.metadata.user_id.startsWith("U")
-                ? `<@${msg.metadata.user_id}>`
-                : `*${msg.metadata.user_id}*`;
+            const user = formatUserTag(msg.metadata.user_id);
             const link = formatSlackLink(msg.metadata.channel, msg.metadata.ts);
             return link
                 ? `> ${user}: <${link}|View message>\n> \`${msg.text}\``
