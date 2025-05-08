@@ -3,7 +3,7 @@ import { Index } from '@upstash/vector'
 import { generateResponseWithClaude } from './generate-answer'
 import type { QueryResult } from "@upstash/vector";
 
-type Metadata = { text: string; author: string };
+type Metadata = { text: string; author: string; channel: string; ts: string };
 
 const index = new Index<Metadata>({
     url: process.env.UPSTASH_VECTOR_REST_URL!,
@@ -43,24 +43,22 @@ export async function handleUserQuestion(question: string) {
     const expert = findSubjectExpert(relevantMessages);
     const answer = await generateResponseWithClaude(question, relevantMessages);
 
-    return {
-        answer,
-        expert,
-        supportingMessages: relevantMessages
-    };
+    return answer;
 }
 
 // Apparently a normalized type for downstream use is best practice
 export type NormalizedMessage = {
     text: string;
-    metadata: { username: string };
+    metadata: { username: string; channel: string; ts: string };
 };
   
 function mapRawToNormalized(result: QueryResult<Metadata>): NormalizedMessage {
     return {
         text: typeof result.metadata?.text === "string" ? result.metadata.text : "",
         metadata: {
-        username: typeof result.metadata?.author === "string" ? result.metadata.author : "unknown",
+            username: typeof result.metadata?.author === "string" ? result.metadata.author : "unknown",
+            channel: typeof result.metadata?.channel === "string" ? result.metadata.channel : "unknown",
+            ts: typeof result.metadata?.ts === "string" ? result.metadata.ts : "unknown",
         },
     };
 }

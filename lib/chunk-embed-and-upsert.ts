@@ -17,7 +17,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 // Upsert multiple chunks to Upstash Vector
-export async function upsertChunks(idPrefix: string, text: string, author: string) {
+export async function upsertChunks(idPrefix: string, text: string, author: string, channel: string, ts: string) {
   const chunks = chunk(text, {
     maxLength: 1024,
     overlap: 128,
@@ -34,6 +34,8 @@ export async function upsertChunks(idPrefix: string, text: string, author: strin
         metadata: {
           text: chunkText,
           author,
+          channel,
+          ts,
         },
       },
     ])

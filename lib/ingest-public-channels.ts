@@ -52,7 +52,6 @@ export async function ingestPublicChannels() {
 
     // 3. Fetch channel history (paginated)
     let historyCursor: string | undefined = undefined
-    let messageCount = 0
     do {
       const history: ConversationsHistoryResponse = await client.conversations.history({
         channel: channel.id,
@@ -67,7 +66,7 @@ export async function ingestPublicChannels() {
             typeof msg.user === 'string'
           ) {
             const username = await getUsername(msg.user);
-            await upsertChunks(`${channel.id}-${msg.ts}`, msg.text, username);
+            await upsertChunks(`${channel.id}-${msg.ts}`, msg.text, username, channel.name, `${msg.ts}`);
           }
         }
       }
