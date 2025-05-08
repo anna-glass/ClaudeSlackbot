@@ -6,7 +6,7 @@ const signingSecret = process.env.SLACK_SIGNING_SECRET!
 
 export const client = new WebClient(process.env.SLACK_BOT_TOKEN);
 
-// See https://api.slack.com/authentication/verifying-requests-from-slack
+// https://api.slack.com/authentication/verifying-requests-from-slack
 export async function isValidSlackRequest({
   request,
   rawBody,
@@ -14,10 +14,8 @@ export async function isValidSlackRequest({
   request: Request
   rawBody: string
 }) {
-  // console.log('Validating Slack request')
-  const timestamp = request.headers.get('X-Slack-Request-Timestamp')
-  const slackSignature = request.headers.get('X-Slack-Signature')
-  // console.log(timestamp, slackSignature)
+  const timestamp = request.headers.get('x-slack-request-timestamp')
+  const slackSignature = request.headers.get('x-slack-signature')
 
   if (!timestamp || !slackSignature) {
     console.log('Missing timestamp or signature')
@@ -81,7 +79,6 @@ export async function getThread(
   });
 
   // Ensure we have messages
-
   if (!messages) throw new Error("No messages found in thread");
 
   const result = messages
