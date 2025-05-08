@@ -9,7 +9,7 @@ export async function generateResponseWithClaude(
   expert?: string
 ): Promise<string> {
   const context = relevantMessages
-    .map((msg, i) => `(${i + 1}) ${msg.metadata.username}: ${msg.text}`)
+    .map((msg, i) => `(${i + 1}) ${msg.metadata.user_id}: ${msg.text}`)
     .join('\n');
 
   const messages = [
@@ -59,9 +59,9 @@ export function formatSlackLink(channel?: string, ts?: string): string | null {
     return messages
         .map(msg => {
             const user =
-                msg.metadata.username && msg.metadata.username.startsWith("U")
-                ? `<@${msg.metadata.username}>`
-                : `*${msg.metadata.username}*`;
+                msg.metadata.user_id && msg.metadata.user_id.startsWith("U")
+                ? `<@${msg.metadata.user_id}>`
+                : `*${msg.metadata.user_id}*`;
             const link = formatSlackLink(msg.metadata.channel, msg.metadata.ts);
             return link
                 ? `> ${user}: <${link}|View message>\n> \`${msg.text}\``

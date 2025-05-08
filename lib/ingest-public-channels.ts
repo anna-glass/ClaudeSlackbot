@@ -5,27 +5,6 @@ import { ConversationsListResponse, ConversationsHistoryResponse, ConversationsR
 const slackToken = process.env.SLACK_BOT_TOKEN!
 const client = new WebClient(slackToken)
 
-const userCache: Record<string, string> = {}
-
-async function getUsername(userId: string): Promise<string> {
-  if (userCache[userId]) return userCache[userId]
-  try {
-    const userRes = await client.users.info({ user: userId })
-    const profile = userRes.user?.profile || {}
-    const username =
-      profile.display_name?.trim() ||
-      userRes.user?.real_name?.trim() ||
-      userRes.user?.name?.trim() ||
-      'unknown'
-    userCache[userId] = username
-    return username
-  } catch (e) {
-    console.error(`Failed to fetch user ${userId}:`, e)
-    userCache[userId] = 'unknown'
-    return 'unknown'
-  }
-}
-
 async function ingestThread(channelId: string, thread_ts: string, channelName: string) {
   let cursor: string | undefined = undefined
   do {
@@ -92,8 +71,7 @@ export async function ingestPublicChannels() {
             msg.text &&
             typeof msg.user === 'string'
           ) {
-            const username = await getUsername(msg.user);
-            await upsertChunks(`${channel.id}-${msg.ts}`, msg.text, username, channel.name, `${msg.ts}`);
+            await upsertChunks(`${channel.id}-${msg.ts}`, msg.text, msg.user, channel.name, `${msg.ts}`);
             // If this message starts a thread, ingest its replies
             if (msg.thread_ts && msg.thread_ts === msg.ts && (msg.reply_count && msg.reply_count > 0)) {
               await ingestThread(channel.id, msg.thread_ts, channel.name)
