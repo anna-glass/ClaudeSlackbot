@@ -1,6 +1,6 @@
 import { GenericMessageEvent } from '@slack/types';
-import { client, getThread, updateStatusUtil } from './slack-utils';
-import { generateResponse } from './generate-response';
+import { client, getThread } from './slack-utils';
+import { handleUserQuestion } from './find-relevant-messages';
 
 export interface AssistantThreadStartedEvent {
   type: "assistant_thread_started";
@@ -15,27 +15,11 @@ export async function assistantThreadMessage(
 ) {
   const { channel_id, thread_ts } = event.assistant_thread;
   console.log(`Thread started: ${channel_id} ${thread_ts}`);
-  console.log(JSON.stringify(event));
 
   await client.chat.postMessage({
     channel: channel_id,
     thread_ts: thread_ts,
-    text: "Hello, I'm an AI assistant built with the AI SDK by Vercel!",
-  });
-
-  await client.assistant.threads.setSuggestedPrompts({
-    channel_id: channel_id,
-    thread_ts: thread_ts,
-    prompts: [
-      {
-        title: "Get the weather",
-        message: "What is the current weather in London?",
-      },
-      {
-        title: "Get the news",
-        message: "What is the latest Premier League news from the BBC?",
-      },
-    ],
+    text: "Hi, I'm an AI assistant built by Slate! Ask me a question, and I'll find you someone to talk to and related messages.",
   });
 }
 
@@ -43,6 +27,7 @@ export async function handleNewAssistantMessage(
   event: GenericMessageEvent,
   botUserId: string,
 ) {
+  // don't respond to bots or if not in a thread
   if (
     event.bot_id ||
     event.bot_id === botUserId ||
@@ -53,27 +38,34 @@ export async function handleNewAssistantMessage(
   }
 
   const { thread_ts, channel } = event;
-  const updateStatus = updateStatusUtil(channel, thread_ts);
-  await updateStatus("is thinking...");
 
-  const messages = await getThread(channel, thread_ts, botUserId);
-  const result = await generateResponse(messages, updateStatus);
+  try {
+    const messages = await getThread(channel, thread_ts, botUserId);
+    const lastUserMessage = [...messages].reverse().find(m => m.role === "user");
 
-  await client.chat.postMessage({
-    channel: channel,
-    thread_ts: thread_ts,
-    text: result,
+    if (!lastUserMessage) {
+      await postReply(channel, thread_ts, "I didn't get that question - let me know if I can help with anything!");
+      return;
+    }
+
+    const answer = await handleUserQuestion(lastUserMessage.content.toString());
+    await postReply(channel, thread_ts, answer);
+
+  } catch (error) {
+    console.error("Error handling assistant message:", error);
+    await postReply(channel, thread_ts, "Sorry, I got lost in the sauce - please try again!");
+  }
+}
+
+async function postReply(channel: string, thread_ts: string | undefined, text: string) {
+  return client.chat.postMessage({
+    channel,
+    thread_ts: thread_ts || undefined,
+    text,
     unfurl_links: false,
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: result,
-        },
-      },
-    ],
+    blocks: [{
+      type: "section",
+      text: { type: "mrkdwn", text }
+    }]
   });
-
-  await updateStatus("");
 }

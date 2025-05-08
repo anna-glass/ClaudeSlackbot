@@ -1,52 +1,40 @@
 import type { AppMentionEvent } from "@slack/types";
-import { client, getThread } from "./slack-utils";
-import { generateResponse } from "./generate-response";
+import { client } from "./slack-utils";
+import { handleUserQuestion } from "./find-relevant-messages";
 
-const updateStatusUtil = async (
-  initialStatus: string,
-  event: AppMentionEvent,
-) => {
-  const initialMessage = await client.chat.postMessage({
-    channel: event.channel,
-    thread_ts: event.thread_ts ?? event.ts,
-    text: initialStatus,
-  });
-
-  if (!initialMessage || !initialMessage.ts)
-    throw new Error("Failed to post initial message");
-
-  const updateMessage = async (status: string) => {
-    await client.chat.update({
-      channel: event.channel,
-      ts: initialMessage.ts as string,
-      text: status,
-    });
-  };
-  return updateMessage;
-};
-
-export async function handleNewAppMention(
-  event: AppMentionEvent,
-  botUserId: string,
-) {
-  console.log("Handling app mention");
+export async function handleNewAppMention(event: AppMentionEvent, botUserId: string) {
+  // don't respond to bots
   if (event.bot_id || event.bot_id === botUserId || event.bot_profile) {
-    console.log("Skipping app mention");
     return;
   }
 
-  const { thread_ts, channel } = event;
-  const updateMessage = await updateStatusUtil("is thinking...", event);
+  const {thread_ts, channel} = event;
 
-  if (thread_ts) {
-    const messages = await getThread(channel, thread_ts, botUserId);
-    const result = await generateResponse(messages, updateMessage);
-    await updateMessage(result);
-  } else {
-    const result = await generateResponse(
-      [{ role: "user", content: event.text }],
-      updateMessage,
-    );
-    await updateMessage(result);
+  try {
+    const question = event.text.replace(`<@${botUserId}>`, "").trim();
+    if (!question) {
+      await postReply(channel, thread_ts, "I didn't get that question - let me know if I can help with anything!");
+      return;
+    }
+
+    const answer = await handleUserQuestion(question);
+    await postReply(channel, thread_ts, answer);
+
+  } catch (error) {
+    console.error("Error handling app mention:", error);
+    await postReply(channel, thread_ts, "Sorry, I got lost in the sauce - please try again!");
   }
+}
+
+async function postReply(channel: string, thread_ts: string | undefined, text: string) {
+  return client.chat.postMessage({
+    channel,
+    thread_ts: thread_ts || undefined,
+    text,
+    unfurl_links: false,
+    blocks: [{
+      type: "section",
+      text: { type: "mrkdwn", text }
+    }]
+  });
 }
