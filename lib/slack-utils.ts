@@ -14,8 +14,8 @@ export async function isValidSlackRequest({
   request: Request
   rawBody: string
 }) {
-  const timestamp = request.headers.get('X-Slack-Request-Timestamp')
-  const slackSignature = request.headers.get('X-Slack-Signature')
+  const timestamp = request.headers.get('x-slack-request-timestamp')
+  const slackSignature = request.headers.get('x-slack-signature')
 
   if (!timestamp || !slackSignature) {
     console.log('Missing timestamp or signature')
