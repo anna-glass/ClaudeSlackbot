@@ -8,10 +8,11 @@ export async function generateResponseWithClaude(
   relevantMessages: NormalizedMessage[],
   expert?: string
 ): Promise<string> {
+  // Build context for Claude using display names only
   const context = relevantMessages
     .map((msg, i) => {
-        const display = msg.metadata.display_name || "User";
-        return `(${i + 1}) ${display}: ${msg.text}`;
+      const display = msg.metadata.display_name || "User";
+      return `(${i + 1}) ${display}: ${msg.text}`;
     })
     .join('\n');
 
@@ -31,42 +32,9 @@ export async function generateResponseWithClaude(
     messages,
   });
 
-  const answer = msg.content
+  // Return just the plain answer string
+  return msg.content
     .map((block: any) => (block.type === "text" ? block.text : ""))
     .join("")
     .trim();
-
-    const expertTag = formatUserTag(expert);
-    const expertLine = expertTag ? `*Who to talk to:* ${expertTag}\n` : "";
-
-    return (
-        `${answer}\n` +
-        expertLine +
-        `${formatSupportingMessages(relevantMessages)}`
-    );
 }
-
-function formatUserTag(user_id?: string): string {
-  if (!user_id) return "None";
-  return user_id.startsWith("U") ? `<@${user_id}>` : `*${user_id}*`;
-}
-  
-export function formatSlackLink(channel?: string, ts?: string): string | null {
-    if (!channel || !ts) return null;
-    const tsLink = ts.replace('.', '');
-    return `https://slack.com/archives/${channel}/p${tsLink}`;
-}
-  
- export function formatSupportingMessages(messages: NormalizedMessage[]): string {
-    if (!messages.length) return "No supporting messages found.";
-    return messages
-        .map(msg => {
-            const user = formatUserTag(msg.metadata.user_id);
-            const link = formatSlackLink(msg.metadata.channel, msg.metadata.ts);
-            return link
-                ? `> ${user}: <${link}|View message>\n> \`${msg.text}\``
-                : `> ${user}: \`${msg.text}\``;
-        })
-        .join("\n");
-}
-  

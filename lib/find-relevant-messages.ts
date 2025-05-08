@@ -2,7 +2,7 @@ import { generateEmbedding } from './chunk-embed-and-upsert'
 import { Index } from '@upstash/vector'
 import { generateResponseWithClaude } from './generate-answer'
 import type { QueryResult } from "@upstash/vector";
-
+import { buildAnswerBlocks } from './build-answer-block';
 type Metadata = { text: string; user_id: string; display_name: string; channel: string; ts: string };
 
 const index = new Index<Metadata>({
@@ -42,8 +42,8 @@ export async function handleUserQuestion(question: string) {
     const relevantMessages = rawMessages.map(mapRawToNormalized);
     const expert = findSubjectExpert(relevantMessages);
     const answer = await generateResponseWithClaude(question, relevantMessages, expert);
-
-    return answer;
+    const answerBlocks = buildAnswerBlocks({ answer, expert, relevantMessages });
+    return answerBlocks;
 }
 
 // Apparently a normalized type for downstream use is best practice

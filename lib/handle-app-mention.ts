@@ -14,20 +14,20 @@ export async function handleNewAppMention(event: AppMentionEvent, botUserId: str
   try {
     const question = event.text.replace(`<@${botUserId}>`, "").trim();
     if (!question) {
-      await postReply(channel, thread_ts, "I didn't get that question - let me know if I can help with anything!");
+      await postReply(channel, thread_ts, [], "I didn't get that question - let me know if I can help with anything!");
       return;
     }
 
-    const answer = await handleUserQuestion(question);
-    await postReply(channel, thread_ts, answer);
+    const answerBlocks = await handleUserQuestion(question);
+    await postReply(channel, thread_ts, answerBlocks, "");
 
   } catch (error) {
     console.error("Error handling app mention:", error);
-    await postReply(channel, thread_ts, "Sorry, I got lost in the sauce - please try again!");
+    await postReply(channel, thread_ts, [], "Sorry, I got lost in the sauce - please try again!");
   }
 }
 
-async function postReply(channel: string, thread_ts: string | undefined, text: string) {
+async function postReply(channel: string, thread_ts: string | undefined, blocks: any[], text: string) {
   return client.chat.postMessage({
     channel,
     thread_ts: thread_ts || undefined,
