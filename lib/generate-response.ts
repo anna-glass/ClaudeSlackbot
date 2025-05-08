@@ -1,3 +1,5 @@
+// deprecated - use generate-answer.ts instead
+
 import { openai } from "@ai-sdk/openai";
 import { CoreMessage, generateText, tool } from "ai";
 import { z } from "zod";

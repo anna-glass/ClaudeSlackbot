@@ -45,8 +45,7 @@ async function ingestThread(channelId: string, thread_ts: string, channelName: s
           // Optionally: skip the first message if it's the parent
           (i > 0 || msg.ts !== thread_ts)
         ) {
-          const username = await getUsername(msg.user)
-          await upsertChunks(`${channelId}-${msg.ts}`, msg.text, username, channelName, `${msg.ts}`)
+          await upsertChunks(`${channelId}-${msg.ts}`, msg.text, msg.user, channelName, `${msg.ts}`)
         }
       }
     }
