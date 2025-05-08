@@ -42,25 +42,72 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Check for the "Start Ingest" button action
   const action = payload.actions?.[0]
   if (action?.action_id === 'start_ingest') {
-    try {
-      await ingestPublicChannels()
-
-      // Respond to Slack with a confirmation message
-      return res.json({
-        response_type: 'ephemeral',
-        text: '✅ Ingest of public channels started!',
-        replace_original: false,
+    const userId = payload.user?.id;
+  
+    ingestPublicChannels()
+      .then(() => {
+        if (userId) {
+          sendAdminStatusDM({
+            accessToken: process.env.SLACK_BOT_TOKEN!,
+            userId,
+            text: "✅ Ingest of public channels is complete!",
+          }).catch(err => {
+            console.error("Failed to send completion DM:", err);
+          });
+        }
       })
-    } catch (err: any) {
-      // Respond with an error message if ingest fails
-      return res.json({
-        response_type: 'ephemeral',
-        text: `❌ Failed to start ingest: ${err.message || 'Unknown error'}`,
-        replace_original: false,
-      })
-    }
+      .catch((err) => {
+        console.error("Ingest failed:", err);
+        if (userId) {
+          sendAdminStatusDM({
+            accessToken: process.env.SLACK_BOT_TOKEN!,
+            userId,
+            text: `❌ Ingest failed: ${err.message || 'Unknown error'}`,
+          }).catch(dmErr => {
+            console.error("Failed to send error DM:", dmErr);
+          });
+        }
+      });
+  
+    return res.json({
+      response_type: 'ephemeral',
+      text: '✅ Ingest of public channels started!',
+      replace_original: false,
+    });
   }
+  
 
   // For any other action, just acknowledge
   res.status(200).end()
+}
+
+export async function sendAdminStatusDM({
+  accessToken,
+  userId,
+  text,
+  blocks,
+}: {
+  accessToken: string;
+  userId: string;
+  text: string;
+  blocks?: any[];
+}) {
+  const response = await fetch('https://slack.com/api/chat.postMessage', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      channel: userId,
+      text,
+      ...(blocks ? { blocks } : {}),
+    })
+  });
+
+  const data = await response.json();
+  if (!data.ok) {
+    throw new Error(`Failed to send admin DM: ${data.error}`);
+  }
+  return data;
 }
