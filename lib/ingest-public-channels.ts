@@ -88,6 +88,11 @@ export async function ingestPublicChannels() {
   } while (cursor)
 
   for (const channel of channels) {
+    // skip archived channels
+    if (channel.is_archived) {
+      console.log(`Skipping archived channel: ${channel.name} (${channel.id})`);
+      continue;
+    }
     // 2. Join channel
     try {
       console.log(`Attempting to join channel: ${channel.name} (${channel.id})`)
