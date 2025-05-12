@@ -6,8 +6,23 @@ import { getDisplayName } from './get-display-name'
 const slackToken = process.env.SLACK_BOT_TOKEN!
 const client = new WebClient(slackToken)
 
+// Simple in-memory cache for display names
+const displayNameCache = new Map<string, string>();
+
+async function getCachedDisplayName(userId: string): Promise<string> {
+  if (displayNameCache.has(userId)) {
+    return displayNameCache.get(userId)!;
+  }
+  const name = await getDisplayName(userId);
+  displayNameCache.set(userId, name);
+  return name;
+}
+
+// Ingest a thread as a single chunk (concatenated messages)
 async function ingestThread(channelId: string, thread_ts: string, channelName: string) {
   let cursor: string | undefined = undefined
+  let threadMessages: any[] = []
+
   do {
     const replies: ConversationsRepliesResponse = await client.conversations.replies({
       channel: channelId,
@@ -15,23 +30,45 @@ async function ingestThread(channelId: string, thread_ts: string, channelName: s
       cursor,
       limit: 1000,
     })
+
     if (replies.messages) {
-      // Skip the first message if it's the thread parent (already ingested)
-      for (const [i, msg] of replies.messages.entries()) {
+      for (const msg of replies.messages) {
         if (
           msg.type === 'message' &&
           msg.text &&
-          typeof msg.user === 'string' &&
-          // Optionally: skip the first message if it's the parent
-          (i > 0 || msg.ts !== thread_ts)
+          typeof msg.user === 'string'
         ) {
-          const displayName = await getDisplayName(msg.user)
-          await upsertChunks(`${channelId}-${msg.ts}`, msg.text, msg.user, displayName, channelName, `${msg.ts}`)
+          const displayName = await getCachedDisplayName(msg.user)
+          if (displayName.toLowerCase() !== 'slate-prod') {
+            threadMessages.push({
+              user: msg.user,
+              displayName,
+              text: msg.text,
+              ts: msg.ts,
+            });
+          }
         }
       }
     }
     cursor = replies.response_metadata?.next_cursor
   } while (cursor)
+
+  if (threadMessages.length > 0) {
+    // Concatenate all thread messages into one chunk, optionally with author
+    const threadText = threadMessages
+      .map(msg => `${msg.displayName}: ${msg.text}`)
+      .join('\n');
+
+    // Use the thread_ts as the unique ID for the thread
+    await upsertChunks(
+      `${channelId}-thread-${thread_ts}`,
+      threadText,
+      threadMessages[0].user,
+      threadMessages[0].displayName,
+      channelName,
+      thread_ts
+    );
+  }
 }
 
 export async function ingestPublicChannels() {
@@ -49,6 +86,7 @@ export async function ingestPublicChannels() {
     }
     cursor = res.response_metadata?.next_cursor
   } while (cursor)
+
   for (const channel of channels) {
     // 2. Join channel
     try {
@@ -73,10 +111,30 @@ export async function ingestPublicChannels() {
             msg.text &&
             typeof msg.user === 'string'
           ) {
-            const displayName = await getDisplayName(msg.user)
-            await upsertChunks(`${channel.id}-${msg.ts}`, msg.text, msg.user, displayName, channel.name, `${msg.ts}`);
-            // If this message starts a thread, ingest its replies
-            if (msg.thread_ts && msg.thread_ts === msg.ts && (msg.reply_count && msg.reply_count > 0)) {
+            const displayName = await getCachedDisplayName(msg.user)
+            if (displayName.toLowerCase() === 'slate-prod') {
+              continue; // Skip messages from your slackbot
+            }
+
+            // Only upsert if NOT a thread parent (let thread handler handle it)
+            if (!msg.thread_ts || msg.thread_ts !== msg.ts) {
+              await upsertChunks(
+                `${channel.id}-${msg.ts}`,
+                msg.text,
+                msg.user,
+                displayName,
+                channel.name,
+                `${msg.ts}`
+              );
+            }
+
+            // If this message starts a thread, ingest its replies as a single chunk
+            if (
+              msg.thread_ts &&
+              msg.thread_ts === msg.ts &&
+              msg.reply_count &&
+              msg.reply_count > 0
+            ) {
               await ingestThread(channel.id, msg.thread_ts, channel.name)
             }
           }
