@@ -1,5 +1,5 @@
 import { WebClient } from '@slack/web-api'
-import { upsertChunks } from './chunk-embed-and-upsert'
+import { upsertChunks, upsertSingleVector } from './chunk-embed-and-upsert'
 import { ConversationsListResponse, ConversationsHistoryResponse, ConversationsRepliesResponse } from '@slack/web-api'
 import { getDisplayName } from './get-display-name'
 
@@ -60,7 +60,7 @@ async function ingestThread(channelId: string, thread_ts: string, channelName: s
       .join('\n');
 
     // Use the thread_ts as the unique ID for the thread
-    await upsertChunks(
+    await upsertSingleVector(
       `${channelId}-thread-${thread_ts}`,
       threadText,
       threadMessages[0].user,
@@ -114,31 +114,35 @@ export async function ingestPublicChannels() {
         for (const msg of history.messages) {
           if (
             msg.type === 'message' &&
+            !msg.subtype && // Only user messages (skip bots/system)
             msg.text &&
             typeof msg.user === 'string'
           ) {
             const displayName = await getCachedDisplayName(msg.user)
-            if (msg.type === 'message' && !msg.subtype) {
-              if (!msg.thread_ts || msg.thread_ts !== msg.ts) {
-                await upsertChunks(
+            if (displayName.toLowerCase() === 'slate-prod') {
+              continue; // Skip your slackbot messages
+            }
+
+            // Only upsert if NOT a thread parent (let thread handler handle it)
+            if (!msg.thread_ts || msg.thread_ts !== msg.ts) {
+              await upsertSingleVector(
                 `${channel.id}-${msg.ts}`,
                 msg.text,
                 msg.user,
                 displayName,
                 channel.name,
                 `${msg.ts}`
-                );
-              }
+              );
+            }
 
-              // If this message starts a thread, ingest its replies as a single chunk
-              if (
-                msg.thread_ts &&
-                msg.thread_ts === msg.ts &&
-                msg.reply_count &&
-                msg.reply_count > 0
-              ) {
-                await ingestThread(channel.id, msg.thread_ts, channel.name)
-              }
+            // If this message starts a thread, ingest its replies as a single chunk
+            if (
+              msg.thread_ts &&
+              msg.thread_ts === msg.ts &&
+              msg.reply_count &&
+              msg.reply_count > 0
+            ) {
+              await ingestThread(channel.id, msg.thread_ts, channel.name)
             }
           }
         }

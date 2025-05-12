@@ -43,3 +43,27 @@ export async function upsertChunks(idPrefix: string, text: string, user_id: stri
   }
 }
 
+export async function upsertSingleVector(
+  id: string,
+  text: string,
+  user_id: string,
+  display_name: string,
+  channel: string,
+  ts: string
+) {
+  const vector = await generateEmbedding(text);
+  await index.upsert([
+    {
+      id,
+      vector,
+      metadata: {
+        text,
+        user_id,
+        display_name,
+        channel,
+        ts,
+      },
+    },
+  ]);
+}
+
