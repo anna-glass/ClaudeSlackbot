@@ -51,6 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: {
         adminUserId: payload.user.id,
       },
+      retries: 0
     })
 
     // Respond to Slack immediately

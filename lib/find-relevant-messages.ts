@@ -16,11 +16,11 @@ async function findRelevantMessages(question: string) {
 
     const results = await index.query({
         vector: embedding,
-        topK: 2,
+        topK: 5,
         includeMetadata: true
     });
 
-    return results;
+    return results.filter(r => typeof r.score === "number" && r.score >= 0.8);
 }
 
 // returns the author with the most messages

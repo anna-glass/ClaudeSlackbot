@@ -112,30 +112,27 @@ export async function ingestPublicChannels() {
             typeof msg.user === 'string'
           ) {
             const displayName = await getCachedDisplayName(msg.user)
-            if (displayName.toLowerCase() === 'slate-prod') {
-              continue; // Skip messages from your slackbot
-            }
-
-            // Only upsert if NOT a thread parent (let thread handler handle it)
-            if (!msg.thread_ts || msg.thread_ts !== msg.ts) {
-              await upsertChunks(
+            if (msg.type === 'message' && !msg.subtype) {
+              if (!msg.thread_ts || msg.thread_ts !== msg.ts) {
+                await upsertChunks(
                 `${channel.id}-${msg.ts}`,
                 msg.text,
                 msg.user,
                 displayName,
                 channel.name,
                 `${msg.ts}`
-              );
-            }
+                );
+              }
 
-            // If this message starts a thread, ingest its replies as a single chunk
-            if (
-              msg.thread_ts &&
-              msg.thread_ts === msg.ts &&
-              msg.reply_count &&
-              msg.reply_count > 0
-            ) {
-              await ingestThread(channel.id, msg.thread_ts, channel.name)
+              // If this message starts a thread, ingest its replies as a single chunk
+              if (
+                msg.thread_ts &&
+                msg.thread_ts === msg.ts &&
+                msg.reply_count &&
+                msg.reply_count > 0
+              ) {
+                await ingestThread(channel.id, msg.thread_ts, channel.name)
+              }
             }
           }
         }
