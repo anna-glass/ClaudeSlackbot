@@ -149,6 +149,7 @@ export async function ingestPublicChannels() {
       }
       historyCursor = history.response_metadata?.next_cursor
     } while (historyCursor)
+    console.log(`Ingested ${channel.name} (${channel.id})`)
   }
   console.log('Ingestion finished.')
 }
