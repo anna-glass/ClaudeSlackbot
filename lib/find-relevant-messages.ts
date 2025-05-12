@@ -20,7 +20,7 @@ async function findRelevantMessages(question: string) {
         includeMetadata: true
     });
 
-    return results.filter(r => typeof r.score === "number" && r.score >= 0.8);
+    return results
 }
 
 // returns the author with the most messages
