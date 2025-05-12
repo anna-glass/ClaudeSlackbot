@@ -90,6 +90,7 @@ export async function ingestPublicChannels() {
   for (const channel of channels) {
     // 2. Join channel
     try {
+      console.log(`Attempting to join channel: ${channel.name} (${channel.id})`)
       await client.conversations.join({ channel: channel.id })
       console.log(`Joined channel: ${channel.name} (${channel.id})`)
     } catch (e) {
