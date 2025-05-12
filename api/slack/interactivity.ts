@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Respond to Slack immediately
     return res.json({
       response_type: 'ephemeral',
-      text: '✅ Ingest of public channels started!',
+      text: 'Ingest of public channels started!',
       replace_original: false,
     })
   }

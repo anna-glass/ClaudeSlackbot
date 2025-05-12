@@ -8,6 +8,12 @@
   "functions": {
     "api/slack/events.ts": {
       "maxDuration": 300
+    },
+    "api/slack/ingest-public-channels-job.ts": {
+      "maxDuration": 500
+    },
+    "api/slack/interactivity.ts": {
+      "maxDuration": 500
     }
   },
   "outputDirectory": "dist"
