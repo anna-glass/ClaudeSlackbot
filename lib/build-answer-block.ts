@@ -44,7 +44,7 @@ export function buildAnswerBlocks({
     });
   
     // Related messages (each as a section)
-    for (const msg of relevantMessages) {
+    for (const msg of relevantMessages.slice(0, 1)) {
       const user = formatUserTag(msg.metadata.user_id);
       const link = formatSlackLink(msg.metadata.channel, msg.metadata.ts);
       const textBlock = link
