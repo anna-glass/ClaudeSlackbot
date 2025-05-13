@@ -1,4 +1,4 @@
-# Slackbot crawler & AI answers
+# Slackbot crawler & Claude AI
 <img width="440" alt="Screenshot 2025-05-13 at 1 48 15 AM" src="https://github.com/user-attachments/assets/a1790659-81fa-4537-b65a-82250f839ae8" />
 
 ## Features
