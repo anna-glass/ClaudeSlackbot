@@ -1,4 +1,5 @@
 # Slackbot crawler & AI answers
+<img width="440" alt="Screenshot 2025-05-13 at 1 48 15 AM" src="https://github.com/user-attachments/assets/a1790659-81fa-4537-b65a-82250f839ae8" />
 
 ## Features
 
@@ -81,7 +82,7 @@ SLACK_CLIENT_ID=your-client-id
 # Anthropic Credentials (create an Anthropic account, get API key)
 ANTHROPIC_API_KEY=your-anthropic-api-key
 
-# Upstash Credentials (create Upstash account, and Vector/Redis databases)
+# Upstash Credentials (create Upstash account, make Vector & Redis databases)
 QSTASH_CURRENT_SIGNING_KEY=sig-your-current-signing-key
 QSTASH_NEXT_SIGNING_KEY=sig-your-next-signing-key
 QSTASH_TOKEN=your-qstash-token
@@ -93,6 +94,21 @@ UPSTASH_REDIS_REST_URL=your-redis-rest-url
 UPSTASH_REDIS_REST_TOKEN=your-redis-rest-token
 BASE_URL=your-base-url
 ```
+
+### 6. Development & testing
+
+- Ensure current code is pushed to main, wait for active deployment on Vercel
+- Copy this link for testing the auth flow: https://slack.com/oauth/v2/authorize?client_id=8811655965175.8860842137074&scope=app_mentions:read,assistant:write,channels:history,channels:join,channels:read,chat:write,im:history,im:read,im:write,users:read&redirect_uri=https://your-domain/api/slack/oauth-callback
+  - Make sure to replace the uri with https://your-domain/api/slack/oauth-callback
+
+### 7. User flow
+<img width="542" alt="Screenshot 2025-05-13 at 1 06 07 AM" src="https://github.com/user-attachments/assets/5c71d9ab-f0af-4b2a-a51b-435e6d332975" />
+<img width="454" alt="Screenshot 2025-05-13 at 1 06 19 AM" src="https://github.com/user-attachments/assets/7460e6cd-edb2-43f7-a6a5-91234b506973" />
+<img width="367" alt="Screenshot 2025-05-13 at 1 06 14 AM" src="https://github.com/user-attachments/assets/0b98fd50-6ec9-4e89-9796-7547f3b03b94" />
+<img width="259" alt="Screenshot 2025-05-13 at 1 06 44 AM" src="https://github.com/user-attachments/assets/f4380995-dde1-4732-b802-796e294bb681" />
+<img width="320" alt="Screenshot 2025-05-13 at 1 07 09 AM" src="https://github.com/user-attachments/assets/c2280a63-1e45-43f7-86c8-572262873ba1" />
+<img width="440" alt="Screenshot 2025-05-13 at 1 48 15 AM" src="https://github.com/user-attachments/assets/e5ab5c8e-291d-4b6e-8ce0-3a196dd31395" />
+
 
 ## License
 
