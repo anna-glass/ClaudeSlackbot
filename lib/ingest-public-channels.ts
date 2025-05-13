@@ -1,13 +1,94 @@
 import { WebClient } from '@slack/web-api'
-import { upsertChunks, upsertSingleVector } from './chunk-embed-and-upsert'
+import { upsertVector } from './chunk-embed-and-upsert'
 import { ConversationsListResponse, ConversationsHistoryResponse, ConversationsRepliesResponse } from '@slack/web-api'
 import { getDisplayName } from './get-display-name'
 
 const slackToken = process.env.SLACK_BOT_TOKEN!
 const client = new WebClient(slackToken)
 
-// Simple in-memory cache for display names
 const displayNameCache = new Map<string, string>();
+
+export async function ingestPublicChannels() {
+  let cursor: string | undefined = undefined
+  let channels: any[] = []
+  do {
+    const res: ConversationsListResponse = await client.conversations.list({
+      types: 'public_channel',
+      limit: 1000,
+      cursor,
+    })
+    if (res.channels) {
+      channels.push(...res.channels)
+    }
+    cursor = res.response_metadata?.next_cursor
+  } while (cursor)
+
+  for (const channel of channels) {
+    // skip archived channels
+    if (channel.is_archived) {
+      console.log(`Skipping archived channel: ${channel.name} (${channel.id})`);
+      continue;
+    }
+    // join channel
+    try {
+      console.log(`Attempting to join channel: ${channel.name} (${channel.id})`)
+      await client.conversations.join({ channel: channel.id })
+      console.log(`Joined channel: ${channel.name} (${channel.id})`)
+    } catch (e) {
+      // ignore errors if already a member or cannot join
+    }
+
+    // fetch channel history (paginated)
+    let historyCursor: string | undefined = undefined
+    do {
+      const history: ConversationsHistoryResponse = await client.conversations.history({
+        channel: channel.id,
+        limit: 1000,
+        cursor: historyCursor,
+      })
+      if (history.messages) {
+        for (const msg of history.messages) {
+          if (
+            msg.type === 'message' &&
+            !msg.subtype &&
+            msg.text &&
+            typeof msg.user === 'string'
+          ) {
+            const displayName = await getCachedDisplayName(msg.user)
+            if (displayName.toLowerCase() === 'slate-prod') {
+              continue;
+            }
+
+            if (!msg.thread_ts || msg.thread_ts !== msg.ts) {
+              await upsertVector(
+                `${channel.id}-${msg.ts}`,
+                msg.text,
+                msg.user,
+                displayName,
+                channel.name,
+                `${msg.ts}`
+              );
+            }
+
+            // if this message starts a thread, ingest its replies as a single chunk
+            if (
+              msg.thread_ts &&
+              msg.thread_ts === msg.ts &&
+              msg.reply_count &&
+              msg.reply_count > 0
+            ) {
+              await ingestThread(channel.id, msg.thread_ts, channel.name)
+            }
+          }
+        }
+      }
+      historyCursor = history.response_metadata?.next_cursor
+    } while (historyCursor)
+    console.log(`Ingested ${channel.name} (${channel.id})`)
+  }
+  console.log('Ingestion finished.')
+}
+
 
 async function getCachedDisplayName(userId: string): Promise<string> {
   if (displayNameCache.has(userId)) {
@@ -18,7 +99,6 @@ async function getCachedDisplayName(userId: string): Promise<string> {
   return name;
 }
 
-// Ingest a thread as a single chunk (concatenated messages)
 async function ingestThread(channelId: string, thread_ts: string, channelName: string) {
   let cursor: string | undefined = undefined
   let threadMessages: any[] = []
@@ -54,13 +134,11 @@ async function ingestThread(channelId: string, thread_ts: string, channelName: s
   } while (cursor)
 
   if (threadMessages.length > 0) {
-    // Concatenate all thread messages into one chunk, optionally with author
     const threadText = threadMessages
       .map(msg => `${msg.displayName}: ${msg.text}`)
       .join('\n');
 
-    // Use the thread_ts as the unique ID for the thread
-    await upsertSingleVector(
+    await upsertVector(
       `${channelId}-thread-${thread_ts}`,
       threadText,
       threadMessages[0].user,
@@ -69,87 +147,4 @@ async function ingestThread(channelId: string, thread_ts: string, channelName: s
       thread_ts
     );
   }
-}
-
-export async function ingestPublicChannels() {
-  // 1. List all public channels
-  let cursor: string | undefined = undefined
-  let channels: any[] = []
-  do {
-    const res: ConversationsListResponse = await client.conversations.list({
-      types: 'public_channel',
-      limit: 1000,
-      cursor,
-    })
-    if (res.channels) {
-      channels.push(...res.channels)
-    }
-    cursor = res.response_metadata?.next_cursor
-  } while (cursor)
-
-  for (const channel of channels) {
-    // skip archived channels
-    if (channel.is_archived) {
-      console.log(`Skipping archived channel: ${channel.name} (${channel.id})`);
-      continue;
-    }
-    // 2. Join channel
-    try {
-      console.log(`Attempting to join channel: ${channel.name} (${channel.id})`)
-      await client.conversations.join({ channel: channel.id })
-      console.log(`Joined channel: ${channel.name} (${channel.id})`)
-    } catch (e) {
-      // Ignore errors if already a member or cannot join
-    }
-
-    // 3. Fetch channel history (paginated)
-    let historyCursor: string | undefined = undefined
-    do {
-      const history: ConversationsHistoryResponse = await client.conversations.history({
-        channel: channel.id,
-        limit: 1000,
-        cursor: historyCursor,
-      })
-      if (history.messages) {
-        for (const msg of history.messages) {
-          if (
-            msg.type === 'message' &&
-            !msg.subtype && // Only user messages (skip bots/system)
-            msg.text &&
-            typeof msg.user === 'string'
-          ) {
-            const displayName = await getCachedDisplayName(msg.user)
-            if (displayName.toLowerCase() === 'slate-prod') {
-              continue; // Skip your slackbot messages
-            }
-
-            // Only upsert if NOT a thread parent (let thread handler handle it)
-            if (!msg.thread_ts || msg.thread_ts !== msg.ts) {
-              await upsertSingleVector(
-                `${channel.id}-${msg.ts}`,
-                msg.text,
-                msg.user,
-                displayName,
-                channel.name,
-                `${msg.ts}`
-              );
-            }
-
-            // If this message starts a thread, ingest its replies as a single chunk
-            if (
-              msg.thread_ts &&
-              msg.thread_ts === msg.ts &&
-              msg.reply_count &&
-              msg.reply_count > 0
-            ) {
-              await ingestThread(channel.id, msg.thread_ts, channel.name)
-            }
-          }
-        }
-      }
-      historyCursor = history.response_metadata?.next_cursor
-    } while (historyCursor)
-    console.log(`Ingested ${channel.name} (${channel.id})`)
-  }
-  console.log('Ingestion finished.')
 }

@@ -8,10 +8,8 @@ export const client = new WebClient(process.env.SLACK_BOT_TOKEN);
 
 function getHeader(request: any, key: string): string | undefined {
   if (typeof request.headers.get === 'function') {
-    // Web Fetch API
     return request.headers.get(key) || undefined;
   }
-  // Node.js/IncomingMessage
   return request.headers[key.toLowerCase()] || undefined;
 }
 
@@ -87,7 +85,6 @@ export async function getThread(
     limit: 50,
   });
 
-  // Ensure we have messages
   if (!messages) throw new Error("No messages found in thread");
 
   const result = messages
@@ -95,8 +92,6 @@ export async function getThread(
       const isBot = !!message.bot_id;
       if (!message.text) return null;
 
-      // For app mentions, remove the mention prefix
-      // For IM messages, keep the full text
       let content = message.text;
       if (!isBot && content.includes(`<@${botUserId}>`)) {
         content = content.replace(`<@${botUserId}> `, "");

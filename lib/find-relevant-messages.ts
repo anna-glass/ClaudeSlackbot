@@ -1,8 +1,9 @@
 import { generateEmbedding } from './chunk-embed-and-upsert'
 import { Index } from '@upstash/vector'
-import { generateResponseWithClaude } from './generate-answer'
+import { generateClaudeResponse } from './generate-claude-response'
 import type { QueryResult } from "@upstash/vector";
 import { buildAnswerBlocks } from './build-answer-block';
+
 type Metadata = { text: string; user_id: string; display_name: string; channel: string; ts: string };
 
 const index = new Index<Metadata>({
@@ -10,7 +11,15 @@ const index = new Index<Metadata>({
     token: process.env.UPSTASH_VECTOR_REST_TOKEN!,
 });
 
-// returns top 2 most relevant messages from vector db
+export async function handleUserQuestion(question: string) {
+    const rawMessages = await findRelevantMessages(question);
+    const relevantMessages = rawMessages.map(mapRawToNormalized);
+    const expert = findSubjectExpert(relevantMessages);
+    const answer = await generateClaudeResponse(question, relevantMessages);
+    const answerBlocks = buildAnswerBlocks({ answer, expert, relevantMessages });
+    return answerBlocks;
+}
+
 async function findRelevantMessages(question: string) {
     const embedding = await generateEmbedding(question);
 
@@ -20,10 +29,9 @@ async function findRelevantMessages(question: string) {
         includeMetadata: true
     });
 
-    return results
+    return results.filter(result => typeof result.score === "number" && result.score >= 0.5);
 }
 
-// returns the author with the most messages
 function findSubjectExpert(searchResults: NormalizedMessage[]): string | undefined {
     const authorCounts: Record<string, number> = {};
 
@@ -37,16 +45,6 @@ function findSubjectExpert(searchResults: NormalizedMessage[]): string | undefin
     .map(([author]) => author)[0];
 }
 
-export async function handleUserQuestion(question: string) {
-    const rawMessages = await findRelevantMessages(question);
-    const relevantMessages = rawMessages.map(mapRawToNormalized);
-    const expert = findSubjectExpert(relevantMessages);
-    const answer = await generateResponseWithClaude(question, relevantMessages, expert);
-    const answerBlocks = buildAnswerBlocks({ answer, expert, relevantMessages });
-    return answerBlocks;
-}
-
-// Apparently a normalized type for downstream use is best practice
 export type NormalizedMessage = {
     text: string;
     metadata: { user_id: string; display_name: string; channel: string; ts: string };

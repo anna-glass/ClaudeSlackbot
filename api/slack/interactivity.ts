@@ -21,13 +21,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   const rawBody = Buffer.concat(buffers).toString();
 
-  // Verify Slack request signature
   const valid = await isValidSlackRequest({ request: req as any, rawBody })
   if (!valid) {
     return res.status(400).send('Invalid Slack signature')
   }
 
-  // Parse Slack payload (it's sent as application/x-www-form-urlencoded)
   const params = new URLSearchParams(rawBody)
   const payloadStr = params.get('payload')
   if (!payloadStr) {
@@ -43,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const action = payload.actions?.[0]
   if (action?.action_id === 'start_ingest') {
-    // Construct your public ingest job endpoint URL
     const jobUrl = `${process.env.BASE_URL}/api/slack/ingest-public-channels-job`
 
     await qstash.publishJSON({
@@ -54,14 +51,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       retries: 0
     })
 
-    // Respond to Slack immediately
     return res.json({
       response_type: 'ephemeral',
       text: 'Ingest of public channels started!',
       replace_original: false,
     })
   }
-
-  // For any other action, just acknowledge
+  
   res.status(200).end()
 }

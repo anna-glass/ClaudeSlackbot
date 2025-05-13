@@ -1,15 +1,9 @@
-
-
 export async function sendAdminOnboardingDM({
     accessToken,
     userId,
-    text,
-    blocks,
   }: {
     accessToken: string;
     userId: string;
-    text: string;
-    blocks?: any[];
   }) {
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
@@ -19,8 +13,7 @@ export async function sendAdminOnboardingDM({
       },
       body: JSON.stringify({
         channel: userId,
-        text,
-        ...(blocks ? { blocks } : {}),
+        blocks: onboardingMessageBlocks
       })
     });
   
@@ -74,15 +67,12 @@ export async function sendAdminOnboardingDM({
   </html>
 `;
 
-
-export const onboardingMessageText = "👋 Thanks for installing the app! Click below to start your Slack ingest.";
-
-export const onboardingMessageBlocks = [
+const onboardingMessageBlocks = [
   {
     "type": "section",
     "text": {
       "type": "mrkdwn",
-      "text": onboardingMessageText
+      "text": "👋 Thanks for installing the app! Click below to start your Slack ingest."
     }
   },
   {

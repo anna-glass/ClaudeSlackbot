@@ -2,8 +2,6 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { Redis } from '@upstash/redis'
 import {
   sendAdminOnboardingDM,
-  onboardingMessageText,
-  onboardingMessageBlocks,
   oauthSuccessHtml,
 } from '../../lib/admin-onboarding-dm'
 
@@ -25,7 +23,6 @@ export default async function handler(
     return res.status(400).json({ error: 'Missing code' });
   }
 
-  // Exchange code for access token
   const params = new URLSearchParams({
     code,
     client_id: process.env.SLACK_CLIENT_ID!,
@@ -58,7 +55,6 @@ export default async function handler(
     return res.status(400).json({ error: 'Missing workspace, token, or admin info' });
   }
 
-  // Save workspace info and admin user ID
   await redis.set(`slack:workspace:${workspaceId}`, {
     workspaceName,
     workspaceId,
@@ -66,19 +62,15 @@ export default async function handler(
     adminUserId,
   });
 
-  // Send onboarding DM to admin
   try {
     await sendAdminOnboardingDM({
       accessToken,
       userId: adminUserId,
-      text: onboardingMessageText,
-      blocks: onboardingMessageBlocks,
     });
     console.log('Sent onboarding DM to admin:', adminUserId);
   } catch (error: any) {
     console.error('Failed to send Slack DM:', error.message);
   }
 
-  // Show success HTML
   res.status(200).send(oauthSuccessHtml);
 }
