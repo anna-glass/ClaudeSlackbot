@@ -18,9 +18,8 @@ pnpm install
 
 ### 2. Create a Slack App
 
-1. Go to [https://api.slack.com/apps](https://api.slack.com/apps) and click "Create New App"
-2. Choose "From scratch" and give your app a name
-3. Select your workspace
+1. Create an app on Slack API dashboard
+2. Choose "From scratch," select workspace you're testing on
 
 ### 3. Deploy your app (Vercel recommended)
 
